@@ -1,0 +1,203 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox         |
+|  \\    /   O peration     | Version:  v2312                               |
+|   \\  /    A nd           | Website:  www.openfoam.com                    |
+|    \\/     M anipulation  |                                               |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+version     2.0;
+format ascii;
+class dictionary;
+object blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale   0.001;  
+
+//parameters
+lengthZ 60; //length of the channel
+alpha 0.414; //ratio of height/width
+heightY 1.55; //height of the channel without solid
+solid 0.025; //thickness of the solid
+widthX 1.69; //width of the channel without solid
+radius 0.32; //arc radius of the fluid
+outerRadius #eval{$solid+$radius}; //arc radius of the solid
+arcAngle #eval{45*pi()/180};
+angleAlpha #eval{atan((($radius*cos($arcAngle))+($heightY-$radius))/($widthX-($radius*sin($arcAngle))))};
+
+//grading
+gradZ // grading along the channel
+(
+    (0.2 0.25 15 )//Division 1
+    (0.6 0.50 1 )//Division 2
+    (0.2 0.25 0.15) //Division 3
+ ); 
+ centerGrad //grading in the middle block
+ (
+    (0.2 0.25 2 )//Division 1
+    (0.6 0.50 1 )//Division 2
+    (0.2 0.25 0.5) //Division 3
+ );
+grad 5; //all other grading
+
+
+//blocking
+blockScale 1.5;
+block #eval{10*$blockScale};
+blockZ #eval{$lengthZ/2}; //blocking along the channel
+
+
+vertices
+    (
+        (0 0 0) //0 correct
+        (#eval{$widthX*0.8} 0 0) //1 correct
+        ($widthX 0 0) //2 correct
+        (#eval{$widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} 0) //3 corrected
+        (#eval{($widthX*0.8)-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} 0)//4 corrected
+        (0 #eval{$heightY*0.2} 0) //5 corrected
+        (0 #eval{$heightY*0.75} 0) //6 corrected
+        (#eval{($widthX*0.8)-(($heightY*0.75/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.75} 0) //7 corrected    
+        (#eval{$radius*sin($arcAngle)} #eval{($radius*cos($arcAngle))+($heightY-$radius)} 0) //8 corrected
+        (0 $heightY 0) //9 corrected
+        (0 #eval{-$solid} 0) //10 corrected
+        (#eval{$widthX*0.8} #eval{-$solid} 0) //11 corrected
+        ($widthX #eval{-$solid} 0) //12 corrected
+        (#eval{$widthX+$solid} #eval{-$solid} 0) //13 corrected
+        (#eval{$widthX+$solid} 0 0) //14 corrected
+        (#eval {($widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha)))+$solid} #eval{$heightY*0.2} 0) //15 corrected      
+        (#eval{$outerRadius*sin($arcAngle)} #eval{($outerRadius*cos($arcAngle))+($heightY-$radius)} 0) //16 corrected
+        (0 #eval{$heightY+$solid} 0) //17 corrected
+
+        (0 0 $lengthZ) //18 correct
+        (#eval{$widthX*0.8} 0 $lengthZ) //19 correct
+        ($widthX 0 $lengthZ) //20 correct
+        (#eval {$widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} $lengthZ) //21 corrected
+        (#eval{($widthX*0.8)-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} $lengthZ)//22 corrected
+        (0 #eval{$heightY*0.2} $lengthZ) //23 corrected
+        (0 #eval{$heightY*0.75} $lengthZ) //24 corrected
+        (#eval{($widthX*0.8)-(($heightY*0.75/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.75} $lengthZ) //25 corrected    
+        (#eval{$radius*sin($arcAngle)} #eval{($radius*cos($arcAngle))+($heightY-$radius)} $lengthZ) //26 corrected
+        (0 $heightY $lengthZ) //27 corrected
+        (0 #eval{-$solid} $lengthZ) //28 corrected
+        (#eval{$widthX*0.8} #eval{-$solid} $lengthZ) //29 corrected
+        ($widthX #eval{-$solid} $lengthZ) //30 corrected
+        (#eval{$widthX+$solid} #eval{-$solid} $lengthZ) //31 corrected
+        (#eval{$widthX+$solid} 0 $lengthZ) //32 corrected
+        (#eval {($widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha)))+$solid} #eval{$heightY*0.2} $lengthZ) //33 corrected        
+        (#eval{$outerRadius*sin($arcAngle)} #eval{($outerRadius*cos($arcAngle))+($heightY-$radius)} $lengthZ) //34 corrected
+        (0 #eval{$heightY+$solid} $lengthZ) //35 corrected
+    
+
+    );
+
+blocks
+(
+hex (0 1 4 5 18 19 22 23)   air     ($block $block $blockZ) simpleGrading (1 $grad $gradZ) //block1
+hex (5 4 7 6 23 22 25 24)   air     ($block $block $blockZ) simpleGrading (1 $centerGrad $gradZ) //block2
+hex (6 7 8 9 24 25 26 27)   air     ($block $block $blockZ)simpleGrading (1 #eval{-$grad} $gradZ) //block3
+hex (4 3 8 7 22 21 26 25)   air     ($block $block $blockZ) simpleGrading (#eval{-$grad} $centerGrad $gradZ) //block4
+hex (1 2 3 4 19 20 21 22)   air     ($block $block $blockZ)simpleGrading (#eval{-$grad} 5 $gradZ) //block5
+
+hex (10 11 1 0 28 29 19 18) solid   ($block 2 $blockZ) simpleGrading (1 1 $gradZ) //solidBlock1
+hex (11 12 2 1 29 30 20 19) solid   ($block 2 $blockZ) simpleGrading (#eval{-$grad} 1 $gradZ) //solidBlock2
+
+hex (12 13 14 2 30 31 32 20) solid (2 2 $blockZ) simpleGrading (1 1 $gradZ) //solidBlock3
+
+hex (2 14 15 3 20 32 33 21) solid (2 $block $blockZ) simpleGrading (1 $grad $gradZ) //solidBlock4
+hex (3 15 16 8 21 33 34 26) solid (2 $block $blockZ) simpleGrading (1 $centerGrad $gradZ) //solidBlock5
+hex (8 16 17 9 26 34 35 27) solid (2 $block $blockZ) simpleGrading (1 1 $gradZ) //solidBlock6
+);
+
+edges
+(
+arc 9 8 (#eval{$radius*sin($arcAngle/2)} #eval{($radius*cos($arcAngle/2))+($heightY-$radius)} 0)
+arc 27 26 (#eval{$radius*sin($arcAngle/2)} #eval{($radius*cos($arcAngle/2))+($heightY-$radius)} $lengthZ)
+
+arc 17 16 (#eval{$outerRadius*sin($arcAngle/2)} #eval{($outerRadius*cos($arcAngle/2))+($heightY-$radius)} 0)
+arc 35 34 (#eval{$outerRadius*sin($arcAngle/2)} #eval{($outerRadius*cos($arcAngle/2))+($heightY-$radius)} $lengthZ)
+);
+
+defaultPatch
+{
+    type patch;
+    name outerWalls;
+}
+
+boundary              
+(
+
+    inlet
+    {
+        type patch;
+        faces
+        (
+        (0 5 4 1)       // Bottom-left face at z=0
+        (5 6 7 4)       // Middle-left face at z=0
+        (6 9 8 7)       // Top-left face at z=0
+        (4 7 8 3)       // Top-right middle face at z=0
+        (1 4 3 2)       // Bottom-right face at z=0
+        );
+    }
+    inletSolid
+    {
+        type patch;
+        faces
+        (
+        (10 0 1 11)     // Bottom-left solid face at z=0
+        (11 1 2 12)     // Bottom-right solid face at z=0
+        (12 2 14 13)    // Right side solid face at z=0
+        (2 3 15 14)     // Top-right solid face at z=0
+        (3 8 16 15)     // Top-middle solid face at z=0
+        (8 9 17 16)     // Top-left solid face at z=0
+        );
+    }
+    outlet
+    {
+        type patch;
+        faces
+        (
+        (18 19 22 23)   // Bottom-left face at z=lengthZ
+        (23 22 25 24)   // Middle-left face at z=lengthZ
+        (24 25 26 27)   // Top-left face at z=lengthZ
+        (22 21 26 25)   // Top-right middle face at z=lengthZ
+        (19 20 21 22)   // Bottom-right face at z=lengthZ
+        );
+    }
+    outletSolid
+    {
+        type patch;
+        faces
+        (
+        (28 29 19 18)   // Bottom-left solid face at z=lengthZ
+        (29 30 20 19)   // Bottom-right solid face at z=lengthZ
+        (30 31 32 20)   // Right side solid face at z=lengthZ
+        (20 32 33 21)   // Top-right solid face at z=lengthZ
+        (21 33 34 26)   // Top-middle solid face at z=lengthZ
+        (26 34 35 27)   // Top-left solid face at z=lengthZ
+        );
+    }
+    centerPlane
+    {
+        type symmetryPlane;
+        faces
+        (   
+        (0 5 23 18)
+        (5 6 24 23)
+        (6 9 27 24)
+        );
+    }
+    centerPlaneSolid
+    {
+        type symmetryPlane;
+        faces
+        (
+        (10 0 18 28)
+        (9 17 35 27)
+        );
+    }
+   
+);
+
+// ************************************************************************* //
