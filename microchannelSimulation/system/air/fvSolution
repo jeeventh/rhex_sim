@@ -19,60 +19,71 @@ solvers {
     rho {
         solver PCG;
         preconditioner DIC;
-        tolerance 1e-7;
+        tolerance 1e-6;
         relTol 0.1;
     }
 
     rhoFinal {
         $rho;
-        tolerance 1e-7;
+        tolerance 1e-6;
         relTol 0;
     }
 
     p_rgh {
-        solver GAMG;
-        tolerance 1e-7;
-        relTol 0.01;
-        smoother GaussSeidel;
+        solver          PCG;          // changed from GAMG
+        preconditioner  DIC;          // Diagonal Incomplete Cholesky preconditioner
+        tolerance       1e-4;         // Much more relaxed tolerance (100x original)
+        relTol          0.1;          // Very relaxed relative tolerance
+        maxIter         1000;         // Higher iterations allowed
     }
 
     p_rghFinal {
         $p_rgh;
-        tolerance 1e-7;
+        tolerance 1e-4;  // Updated to match p_rgh
         relTol 0;
     }
 
     "(U|h|k|epsilon|R|Yi)"
-
         {
         solver PBiCGStab;
         preconditioner DILU;
-        tolerance 1e-7;
+        tolerance 1e-6;
         relTol 0.1;
     }
 
     "(U|h|k|epsilon|R|Yi)Final"
-
         {
         $U;
-        tolerance 1e-7;
+        tolerance 1e-6;
         relTol 0;
     }
 }
 
 PIMPLE {
-    momentumPredictor yes;
-    consistent true;
-    nCorrectors 5;
-    nNonOrthogonalCorrectors 1;
+    momentumPredictor no;       // Changed to no - can help with stability
+    consistent no;              // Changed to no - less strict momentum equation
+    nCorrectors 2;              // Reduced to default
+    nNonOrthogonalCorrectors 0; // Reduced to improve convergence
+    nOuterCorrectors 2;         // Increased
     pRefCell    0;
     pRefValue    0;
+
+    residualControl
+    {
+        p_rgh           1e-3;   // Further relaxed
+        U               1e-3;   // Relaxed
+        h               1e-3;   // Relaxed
+    }
 }
 
 relaxationFactors {
     equations {
-        "h.*" 1;
-        "U.*" 1;
+        "h.*"    0.5;    // Moderate relaxation 
+        "U.*"    0.5;    // Moderate relaxation
+    }
+    fields
+    {
+        p_rgh    0.3;    // Moderate relaxation
     }
 }
 

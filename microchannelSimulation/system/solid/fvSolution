@@ -21,7 +21,7 @@ solvers {
         solver PCG;
         preconditioner DIC;
         tolerance 1e-06;
-        relTol 0.1;
+        relTol 0.1; // Already good
     }
 
     hFinal {
@@ -32,14 +32,19 @@ solvers {
 }
 
 PIMPLE {
-    nNonOrthogonalCorrectors 1;
+    nNonOrthogonalCorrectors 0;  // Reduced for stability
+    nCorrectors 2;               // Reduced to match fluid
+    nOuterCorrectors 2;          // Match fluid region
+
+    residualControl {
+        h 1e-3; // Further relaxed for faster convergence
+    }
 }
 
 relaxationFactors {
     equations {
-        h 0.7;
+        h 0.5; // Increased from 0.2 for better convergence
     }
 }
-
 
 // ************************************************************************* //

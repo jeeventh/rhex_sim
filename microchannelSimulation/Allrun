@@ -11,8 +11,10 @@ runApplication splitMeshRegions -cellZonesOnly -overwrite
 
 runApplication decomposePar -allRegions
 
+runApplication mpirun -np 4 chtMultiRegionFoam -parallel
+
 runApplication $(getApplication)
 
-# runApplication reconstructPar -allRegions -newTimes
+runApplication reconstructPar -allRegions -newTimes
 
 #------------------------------------------------------------------------------

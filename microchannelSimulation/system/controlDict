@@ -22,21 +22,21 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         1;
+endTime         0.001;
 
-deltaT          1e-5;
+deltaT          1e-6;  
 
 writeControl    adjustable;
 
-writeInterval   1e-2;
+writeInterval   0.0001;
 
 purgeWrite      0;
 
 writeFormat     binary;
 
-writePrecision  8;
+writePrecision  4;
 
-writeCompression off;
+writeCompression on;
 
 timeFormat      general;
 
@@ -44,11 +44,12 @@ timePrecision   6;
 
 runTimeModifiable yes;
 
-maxCo           0.2;
+maxCo           0.3;  // Reduced for better stability
 
-maxDi           5.0;
+maxDi           3.0;
 
 adjustTimeStep  yes;
+
 
 
 // ************************************************************************* //

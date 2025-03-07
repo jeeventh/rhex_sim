@@ -5,17 +5,16 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    object      fvSolution;
+FoamFile {
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object fvSolution;
 }
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-PIMPLE
-{
+PIMPLE {
     nOuterCorrectors 1;
 }
 
