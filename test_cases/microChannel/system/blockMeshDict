@@ -16,23 +16,25 @@ object blockMeshDict;
 
 scale   0.001;  
 
-//parameters
-lengthZ 60; //length of the channel
-alpha 0.414; //ratio of height/width
-heightY 1.55; //height of the channel without solid
-solid 0.025; //thickness of the solid
-widthX 1.69; //width of the channel without solid
-radius 0.32; //arc radius of the fluid
+// parameters
+lengthZ 60;   // length of the channel
+alpha 0.414;  // ratio of height/width
+heightY 1.55; // height of the channel without solid
+solid 0.025;  // thickness of the solid
+widthX 1.69;  // width of the channel without solid
+radius 0.32;  // arc radius of the fluid
 outerRadius #eval{$solid+$radius}; //arc radius of the solid
 arcAngle #eval{45*pi()/180};
 angleAlpha #eval{atan((($radius*cos($arcAngle))+($heightY-$radius))/($widthX-($radius*sin($arcAngle))))};
 
-//grading
+// grading
+expZ 10;
+iExpZ #eval{1.0/$expZ};
 gradZ // grading along the channel
 (
-    (0.2 0.25 15 )//Division 1
-    (0.6 0.50 1 )//Division 2
-    (0.2 0.25 0.15) //Division 3
+    (0.2 0.3 $expZ ) // Division 1
+    (0.6 0.4 1 ) // Division 2
+    (0.2 0.3 $iExpZ ) // Division 3
  ); 
  centerGrad //grading in the middle block
  (
@@ -43,10 +45,10 @@ gradZ // grading along the channel
 grad 5; //all other grading
 
 
-//blocking
-blockScale 1.5;
-block #eval{10*$blockScale};
-blockZ #eval{$lengthZ/2}; //blocking along the channel
+// blocking
+blockScale 1.0;
+block #eval{round(10*$blockScale)};
+blockZ #eval{round($lengthZ*3*$blockScale)}; // blocking along the channel
 
 
 vertices
@@ -88,8 +90,6 @@ vertices
         (#eval {($widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha)))+$solid} #eval{$heightY*0.2} $lengthZ) //33 corrected        
         (#eval{$outerRadius*sin($arcAngle)} #eval{($outerRadius*cos($arcAngle))+($heightY-$radius)} $lengthZ) //34 corrected
         (0 #eval{$heightY+$solid} $lengthZ) //35 corrected
-    
-
     );
 
 blocks

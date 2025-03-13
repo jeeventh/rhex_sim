@@ -9,35 +9,33 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volVectorField;
-    object      U;
+    class       dictionary;
+    object      fvSchemes;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [ 0 1 -1 0 0 0 0 ];
-
-internalField   uniform (0 0 0);
-
-boundaryField
+ddtSchemes
 {
-    #includeEtc "caseDicts/setConstraintTypes"
+}
 
-    inlet
-    {
-        type            fixedValue;
-        value           uniform (0 0 0.5);
-    }
+gradSchemes
+{
+}
 
-    outlet
-    {
-        type            pressureInletOutletVelocity;
-        value           $internalField;
-    }
+divSchemes
+{
+}
 
-    air_to_solid
-    {
-        type            noSlip;
-    }
+laplacianSchemes
+{
+}
+
+interpolationSchemes
+{
+}
+
+snGradSchemes
+{
 }
 
 

@@ -9,47 +9,41 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       dictionary;
-    object      controlDict;
+    class       volScalarField;
+    object      T;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     chtMultiRegionFoam;
+dimensions      [ 0 0 0 1 0 0 0 ];
 
-startFrom       latestTime;
+internalField   uniform 278;
 
-startTime       0;
+boundaryField
+{
+    #includeEtc "caseDicts/setConstraintTypes"
 
-stopAt          endTime;
+    inlet
+    {
+        type            inletOutlet;
+        value           uniform 298;
+        inletValue      uniform 298;
+    }
 
-endTime         0.001;
+    outlet
+    {
+        type            inletOutlet;
+        value           uniform 278;
+        inletValue      uniform 278;
+    }
 
-deltaT          1e-6;  
-
-writeControl    adjustable;
-
-writeInterval   0.0001;
-
-purgeWrite      0;
-
-writeFormat     binary;
-
-writePrecision  4;
-
-writeCompression on;
-
-timeFormat      general;
-
-timePrecision   6;
-
-runTimeModifiable yes;
-
-maxCo           0.3;  // Reduced for better stability
-
-maxDi           3.0;
-
-adjustTimeStep  yes;
-
+    air_to_solid
+    {
+        type            compressible::turbulentTemperatureRadCoupledMixed;
+        value           $internalField;
+        Tnbr            T;
+        kappaMethod     fluidThermo;
+    }
+}
 
 
 // ************************************************************************* //

@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2406                                  |
+|  \\    /   O peration     | Version:  v2406                                 |
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,35 +9,44 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    arch        "LSB;label=32;scalar=64";
-    class       volScalarField;
-    location    "0/air";
-    object      cellToRegion;
+    class       volVectorField;
+    object      U;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 0 0 0 0];
+dimensions      [ 0 1 -1 0 0 0 0 ];
 
-internalField   uniform 0;
+internalField   uniform (0 0 0);
 
 boundaryField
 {
+    #includeEtc "caseDicts/setConstraintTypes"
+
     inlet
     {
-        type            zeroGradient;
+        type            uniformFixedValue;
+        value           $internalField;
+        uniformValue
+        {
+            type        expression;
+            variables
+            (
+                "Uin = 0.5" // mean inflow/outflow velocity magnitude
+                "T = 0.2"   // period, one complete inflow-outflow cycle
+                "Ts = 10.0" // reducing Ts leads to a smoother alternation of the flow direction
+            );
+            expression  "(Uin * tanh( sin(2*pi()*time() / T) * Ts ) ) * vector(0, 0, 1)";
+        }
     }
+
     outlet
     {
         type            zeroGradient;
     }
-    centerPlane
-    {
-        type            symmetryPlane;
-    }
+
     air_to_solid
     {
-        type            calculated;
-        value           uniform 0;
+        type            noSlip;
     }
 }
 

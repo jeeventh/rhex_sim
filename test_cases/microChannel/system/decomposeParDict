@@ -9,14 +9,13 @@ FoamFile {
     version 2.0;
     format ascii;
     class dictionary;
-    object fvSolution;
+    object decomposeParDict;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-PIMPLE {
-    nOuterCorrectors 1;
-}
+numberOfSubdomains 4;
 
+method scotch;
 
 // ************************************************************************* //
