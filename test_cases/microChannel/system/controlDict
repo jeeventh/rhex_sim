@@ -1,0 +1,187 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2406                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     chtMultiRegionFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1;
+
+deltaT          1e-6;  
+
+writeControl    adjustable;
+
+writeInterval   1e-3;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable  true;
+
+maxCo           0.9;
+
+maxDi           40;
+
+adjustTimeStep  yes;
+
+functions
+{
+    solverInfo_air
+    {
+        type            solverInfo;
+        libs            ("libutilityFunctionObjects.so");
+        fields          (U h p_rgh);
+        region          air;
+        log             true;
+        writeResidualFields false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
+    solverInfo_solid
+    {
+        type            solverInfo;
+        libs            ("libutilityFunctionObjects.so");
+        fields          (h);
+        region          solid;
+        log             true;
+        writeResidualFields false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
+    fieldMinMax_air
+    {
+        type        fieldMinMax;
+        libs        (fieldFunctionObjects);
+        mode        magnitude;
+        fields      (U T p);
+        location    true;
+        region      air;
+        log         true;
+    }
+
+    fieldMinMax_solid
+    {
+        type        fieldMinMax;
+        libs        (fieldFunctionObjects);
+        mode        magnitude;
+        fields      (T);
+        location    true;
+        region      solid;
+        log         true;
+    }
+
+    delta_p
+    {
+        type        multiFieldValue;
+        libs        (fieldFunctionObjects);
+        operation   subtract;
+        functions
+        {
+            pInlet
+            {
+                type            surfaceFieldValue;
+                libs            (fieldFunctionObjects);
+                fields          (p);
+                operation       areaAverage;
+                region          air;
+                regionType      patch;
+                name            inlet;
+                writeFields     false;
+            }
+
+            pOutlet
+            {
+                type            surfaceFieldValue;
+                libs            (fieldFunctionObjects);
+                fields          (p);
+                operation       areaAverage;
+                region          air;
+                regionType      patch;
+                name            outlet;
+                writeFields     false;
+            }
+        }
+        writeToFile     true;
+        region          air;
+        log             true;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
+    delta_T
+    {
+        type        multiFieldValue;
+        libs        (fieldFunctionObjects);
+        operation   subtract;
+        functions
+        {
+            TInlet
+            {
+                type            surfaceFieldValue;
+                libs            (fieldFunctionObjects);
+                fields          (T);
+                operation       weightedAverage;
+                weightField     phi;
+                region          air;
+                regionType      patch;
+                name            inlet;
+                writeFields     false;
+            }
+
+            TOutlet
+            {
+                type            surfaceFieldValue;
+                libs            (fieldFunctionObjects);
+                fields          (T);
+                operation       weightedAverage;
+                weightField     phi;
+                region          air;
+                regionType      patch;
+                name            outlet;
+                writeFields     false;
+            }
+        }
+        writeToFile     true;
+        region          air;
+        log             true;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+}
+
+
+// ************************************************************************* //
