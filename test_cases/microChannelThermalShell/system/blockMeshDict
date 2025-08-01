@@ -1,0 +1,162 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox         |
+|  \\    /   O peration     | Version:  v2312                               |
+|   \\  /    A nd           | Website:  www.openfoam.com                    |
+|    \\/     M anipulation  |                                               |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+version     2.0;
+format ascii;
+class dictionary;
+object blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scale   0.001;  
+
+//parameters
+lengthZ 200; //length of the channel
+alpha 0.414; //ratio of height/width
+heightY 1.55; //height of the channel without solid
+solid 0.025; //thickness of the solid
+widthX 1.69; //width of the channel without solid
+radius 0.32; //arc radius of the fluid domain
+outerRadius #eval{$solid+$radius}; //arc radius of the solid
+arcAngle #eval{45*pi()/180};
+angleAlpha #eval{atan((($radius*cos($arcAngle))+($heightY-$radius))/($widthX-($radius*sin($arcAngle))))};
+
+//grading
+gradZ // grading along the channel
+(
+    (0.2 0.25 10 )//Division 1
+    (0.6 0.50 1 )//Division 2
+    (0.2 0.25 0.1) //Division 3
+ ); 
+ centerGrad //grading in the middle block
+ (
+    (0.2 0.25 2 )//Division 1
+    (0.6 0.50 1 )//Division 2
+    (0.2 0.25 0.5) //Division 3
+ );
+grad 5; //all other grading
+
+
+//blocking
+blockScale 1.5;
+block #eval{10*$blockScale};
+blockZ #eval{$lengthZ/2}; //blocking along the channel
+
+
+vertices
+    (
+        (0 0 0) //0
+        (#eval{$widthX*0.8} 0 0) //1
+        ($widthX 0 0) //2
+        (#eval{$widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} 0) //3
+        (#eval{($widthX*0.8)-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} 0) //4
+        (0 #eval{$heightY*0.2} 0) //5
+        (0 #eval{$heightY*0.75} 0) //6
+        (#eval{($widthX*0.8)-(($heightY*0.75/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.75} 0) //7
+        (#eval{$radius*sin($arcAngle)} #eval{($radius*cos($arcAngle))+($heightY-$radius)} 0) //8
+        (0 $heightY 0) //9
+
+
+        (0 0 $lengthZ) //10
+        (#eval{$widthX*0.8} 0 $lengthZ) //11
+        ($widthX 0 $lengthZ) //12
+        (#eval{$widthX-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} $lengthZ) //13
+        (#eval{($widthX*0.8)-(($heightY*0.2/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.2} $lengthZ) //14
+        (0 #eval{$heightY*0.2} $lengthZ) //15
+        (0 #eval{$heightY*0.75} $lengthZ) //16
+        (#eval{($widthX*0.8)-(($heightY*0.75/sin($angleAlpha))*cos($angleAlpha))} #eval{$heightY*0.75} $lengthZ) //17
+        (#eval{$radius*sin($arcAngle)} #eval{($radius*cos($arcAngle))+($heightY-$radius)} $lengthZ) //18
+        (0 $heightY $lengthZ) //19
+
+    
+
+    );
+
+blocks
+(
+    hex (0 1 4 5 10 11 14 15) air ($block $block $blockZ) simpleGrading (1 $grad $gradZ) //block1
+    hex (5 4 7 6 15 14 17 16) air ($block $block $blockZ) simpleGrading (1 $centerGrad $gradZ) //block2
+    hex (6 7 8 9 16 17 18 19) air ($block $block $blockZ) simpleGrading (1 #eval{-$grad} $gradZ) //block3
+    hex (4 3 8 7 14 13 18 17) air ($block $block $blockZ) simpleGrading (#eval{-$grad} $centerGrad $gradZ) //block4
+    hex (1 2 3 4 11 12 13 14) air ($block $block $blockZ) simpleGrading (#eval{-$grad} 5 $gradZ) //block5
+
+
+);
+
+edges
+(
+    arc 9 8 (#eval{$radius*sin($arcAngle/2)} #eval{($radius*cos($arcAngle/2))+($heightY-$radius)} 0)
+    arc 19 18 (#eval{$radius*sin($arcAngle/2)} #eval{($radius*cos($arcAngle/2))+($heightY-$radius)} $lengthZ)
+
+
+);
+
+defaultPatch
+{
+    type patch;
+    name outerWalls;
+}
+
+boundary              
+(
+
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (0 1 4 5)
+            (5 4 7 6)
+            (6 7 8 9)
+            (4 3 8 7)
+            (1 2 3 4)
+        );
+    }
+
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (10 15 14 11)
+            (15 16 17 14)
+            (16 19 18 17)
+            (14 17 18 13)
+            (11 14 13 12)
+        );
+    }
+
+    centerPlane
+    {
+        type symmetryPlane;
+        faces
+        (
+            (0 5 15 10)
+            (5 6 16 15)
+            (6 9 19 16)
+        );
+    }
+
+    thermalShell
+    {
+        type wall;
+        faces
+        (
+            (2 12 13 3)     // Right wall block5
+            (3 13 18 8)     // Right wall block4  
+            (8 18 19 9)     // Top curved wall block3
+            (1 11 12 2)     // Bottom wall block5
+            (0 10 11 1)     // Bottom wall block1
+        );
+    }
+
+   
+);
+
+// ************************************************************************* //
